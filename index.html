@@ -11,10 +11,6 @@
     margin: 20px;
   }
 
-  h2 {
-    margin-top: 30px;
-  }
-
   .button-container {
     display: flex;
     flex-wrap: wrap;
@@ -51,7 +47,7 @@
   }
 
   #actionButtons {
-    margin-top: 40px;
+    margin-top: 30px;
     text-align: center;
   }
 
@@ -83,7 +79,6 @@
 
 <h1>Rhode Product URL Selector</h1>
 
-<h2>All Products</h2>
 <div class="button-container" id="products"></div>
 
 <div id="actionButtons">
@@ -99,13 +94,14 @@
 </div>
 
 <script>
+/* ✅ CORS-SAFE XML SOURCE */
 const XML_URL =
-  "https://www.rhodeskin.com/sitemap_products_1.xml";
+  "https://api.allorigins.win/raw?url=https://www.rhodeskin.com/sitemap_products_1.xml";
 
 async function loadProductsFromXML() {
   try {
     const response = await fetch(XML_URL);
-    if (!response.ok) throw new Error("Failed to fetch XML sitemap");
+    if (!response.ok) throw new Error("XML fetch failed");
 
     const xmlText = await response.text();
     const parser = new DOMParser();
@@ -114,21 +110,21 @@ async function loadProductsFromXML() {
     const urls = xml.getElementsByTagName("url");
     const container = document.getElementById("products");
 
-    Array.from(urls).forEach(urlNode => {
-      const loc = urlNode.getElementsByTagName("loc")[0]?.textContent;
-      const imageLoc = urlNode.getElementsByTagName("image:loc")[0]?.textContent;
+    Array.from(urls).forEach(node => {
+      const loc = node.getElementsByTagName("loc")[0]?.textContent;
+      const image = node.getElementsByTagName("image:loc")[0]?.textContent;
       const title =
-        urlNode.getElementsByTagName("image:title")[0]?.textContent ||
+        node.getElementsByTagName("image:title")[0]?.textContent ||
         loc?.split("/products/")[1]?.replace(/-/g, " ");
 
-      if (!loc || !imageLoc) return;
+      if (!loc || !image) return;
 
       const button = document.createElement("button");
       button.className = "product-button";
       button.dataset.url = loc;
 
       const img = document.createElement("img");
-      img.src = imageLoc;
+      img.src = image;
       img.alt = title;
 
       const label = document.createElement("span");
@@ -138,7 +134,6 @@ async function loadProductsFromXML() {
       button.appendChild(label);
 
       button.onclick = () => button.classList.toggle("selected");
-
       container.appendChild(button);
     });
   } catch (err) {
@@ -157,17 +152,15 @@ document.getElementById("selectAll").onclick = () =>
 document.getElementById("clearSelection").onclick = () => {
   document.querySelectorAll(".product-button")
     .forEach(b => b.classList.remove("selected"));
-
-  document.getElementById("output").value = "";
   document.getElementById("outputContainer").style.display = "none";
 };
 
 document.getElementById("showSelected").onclick = () => {
-  const urls = [...document.querySelectorAll(".product-button.selected")]
-    .map(b => b.dataset.url)
-    .join("\n");
+  document.getElementById("output").value =
+    [...document.querySelectorAll(".product-button.selected")]
+      .map(b => b.dataset.url)
+      .join("\n");
 
-  document.getElementById("output").value = urls;
   document.getElementById("outputContainer").style.display = "block";
 };
 
